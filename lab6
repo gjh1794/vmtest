@@ -5,18 +5,21 @@ Fork:
 #include<string.h>
 
 int main() {
+	int fd[2];
+	pipe(fd);
 	while(1) {
-		char input[256];
-		char cypher[256];
+		char input[1000];
+		char cypher[1000];
 		char xor = 'g';
 		printf(">>");
-		fgets(input, 256, stdin);
+		fgets(input, 1000, stdin);
 		char esc[] = "exit\n";
 		if(strcmp(input, esc) == 0) {
 			break;
 		}
+		printf("%s\n", input); 
 		//printf("I'm parent.\n");
-		for(int z = 0; z < 256; z++) {
+		for(int z = 0; z < 1000; z++) {
 			if(input[z] == '\0') {
 				cypher[z] = '\0';
 				break;
@@ -24,6 +27,7 @@ int main() {
 			char cypchar = input[z] ^ xor;
 			cypher[z] = cypchar;
 		}
+		write(fd[1], cypher, 1000);
 		pid_t pid = fork();
 		if(pid < 0) {
 			printf("fork failed.\n");
@@ -31,8 +35,11 @@ int main() {
 		}
 		else if(pid == 0) {
 			//in child process
-			char* argvec[] = {"./filewrite", cypher, NULL};
-			if(execvp(argvec[0], argvec) < 0) {
+			char input2[1000];
+			read(fd[0], input2, 1000);
+			printf("%s\n", input2);
+			char* argvec[] = {"./filewrite", input2, NULL};
+			if(execv(argvec[0], argvec) < 0) {
 				printf("Exec Fails.\n");
 				exit(1);
 			}
@@ -49,7 +56,6 @@ Filewrite:
 #include<unistd.h>
 
 int main(int argc, char* argv[]) {
-	//TODO XOR cipher
 	char xor = 'g';
 	char* cypher = argv[1];
 	char pt[256];
