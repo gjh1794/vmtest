@@ -58,8 +58,8 @@ Filewrite:
 int main(int argc, char* argv[]) {
 	char xor = 'g';
 	char* cypher = argv[1];
-	char pt[256];
-	for(int z = 0; z < 256; z++) {
+	char pt[1000];
+	for(int z = 0; z < 1000; z++) {
 		if(cypher[z] == '\0') {
 			break;
 		}
@@ -67,7 +67,7 @@ int main(int argc, char* argv[]) {
 		pt[z] = ptchar;
 	}
 	FILE* fp = fopen("plaintext.txt", "w+");
-	fprintf(fp, "Unencrypted plaintext: %s\n", pt);
+	fprintf(fp, "%s\n", pt);
 	fprintf(fp, "End of message\n");
 	fclose(fp);
 	return 0;
