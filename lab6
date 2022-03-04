@@ -23,10 +23,11 @@ int main() {
 		char* word = (char*)malloc(sizeof(char)*1000);	
 		while(1) {
 			read(fd[0], word, 1000);
-			printf("%s\n", fd[0]);
-			fflush(stdout);
-			if(strcmp(input, esc) == 0) {
-				printf("need to go bye");
+			//printf("%s\n", word);
+			//fflush(stdout);
+			//close(fd[0]);
+			if(strcmp(word, esc) == 0) {
+				printf("need to go bye\n");
 				fflush(stdout);			
 				break;
 			} else if (numchars + strlen(word) > 1000) {
@@ -40,8 +41,8 @@ int main() {
 				input2[numchars] = ptchar;
 				numchars++;
 			}
-			printf("%d\n", numchars);
-			fflush(stdout);
+			//printf("%d\n", numchars);
+			//fflush(stdout);
 			//input2[numchars] = '\n';
 			//numchars++;
 			//char* argvec[] = {"./filewrite", input2, NULL};
@@ -83,10 +84,11 @@ int main() {
 				cypher[z] = cypchar;
 			}
 			write(fd[1], cypher, 1000);
+			//close(fd[1]);
 			//dup2(fd[0], STDIN_FILENO);
 		}
 	}
-	//wait(NULL);
+	wait(NULL);
 	printf("Parent process is doing something here.\n");
 	fflush(stdout);
 	return 0;
