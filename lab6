@@ -7,47 +7,88 @@ Fork:
 int main() {
 	int fd[2];
 	pipe(fd);
-	while(1) {
-		char input[1000];
-		char cypher[1000];
-		char xor = 'g';
-		printf(">>");
-		fgets(input, 1000, stdin);
-		char esc[] = "exit\n";
-		if(strcmp(input, esc) == 0) {
-			break;
-		}
-		printf("%s\n", input); 
-		//printf("I'm parent.\n");
-		for(int z = 0; z < 1000; z++) {
-			if(input[z] == '\0') {
-				cypher[z] = '\0';
+	char input[1000];
+	char xor = 'g';
+	char* esc = "exit\n";
+	pid_t pid = fork();
+	if(pid < 0) {
+		printf("fork failed.\n");
+		fflush(stdout);
+		exit(1);
+	}
+	else if(pid == 0) {
+		//in child process
+		char* input2 = (char*)malloc(sizeof(char)*1000);
+		int numchars = 0;
+		char* word = (char*)malloc(sizeof(char)*1000);	
+		while(1) {
+			read(fd[0], word, 1000);
+			printf("%s\n", fd[0]);
+			fflush(stdout);
+			if(strcmp(input, esc) == 0) {
+				printf("need to go bye");
+				fflush(stdout);			
+				break;
+			} else if (numchars + strlen(word) > 1000) {
 				break;
 			}
-			char cypchar = input[z] ^ xor;
-			cypher[z] = cypchar;
-		}
-		write(fd[1], cypher, 1000);
-		pid_t pid = fork();
-		if(pid < 0) {
-			printf("fork failed.\n");
-			exit(1);
-		}
-		else if(pid == 0) {
-			//in child process
-			char input2[1000];
-			read(fd[0], input2, 1000);
-			printf("%s\n", input2);
-			char* argvec[] = {"./filewrite", input2, NULL};
-			if(execv(argvec[0], argvec) < 0) {
-				printf("Exec Fails.\n");
-				exit(1);
+			for(int z = 0; z < 1000; z++) {
+				if(word[z] == '\0') {
+					break;
+				}
+				char ptchar = word[z] ^ xor;
+				input2[numchars] = ptchar;
+				numchars++;
 			}
-			printf("end of exec.\n");
+			printf("%d\n", numchars);
+			fflush(stdout);
+			//input2[numchars] = '\n';
+			//numchars++;
+			//char* argvec[] = {"./filewrite", input2, NULL};
+			//if(execv(argvec[0], argvec) < 0) {
+				//printf("Exec Fails.\n");
+				//fflush(stdout);
+				//exit(1);
+			//}
+			//printf("end of exec.\n");
+			//fflush(stdout);
 		}
-		wait(NULL);
-		printf("Parent process is doing something here.\n");
+		printf("writing to file\n");
+		fflush(stdout);
+		FILE* fp = fopen("plaintext.txt", "w+");
+		fprintf(fp, "%s\n", input2);
+		fclose(fp);
+		free(word);
+		free(input2);
+	} else {
+		char cypher[1000];
+		while(1) {			
+			printf(">>");
+			fgets(input, 1000, stdin);
+			fflush(stdout);
+			if(strcmp(input, esc) == 0) {
+				write(fd[1], esc, 10);
+				//dup2(fd[0], STDIN_FILENO);			
+				break;
+			}
+			//printf("%s\n", input); 
+			//fflush(stdout);
+			//printf("I'm parent.\n");
+			for(int z = 0; z < 1000; z++) {
+				if(input[z] == '\0') {
+					cypher[z] = '\0';
+					break;
+				}
+				char cypchar = input[z] ^ xor;
+				cypher[z] = cypchar;
+			}
+			write(fd[1], cypher, 1000);
+			//dup2(fd[0], STDIN_FILENO);
+		}
 	}
+	//wait(NULL);
+	printf("Parent process is doing something here.\n");
+	fflush(stdout);
 	return 0;
 }
 
@@ -59,6 +100,7 @@ int main(int argc, char* argv[]) {
 	char xor = 'g';
 	char* cypher = argv[1];
 	char pt[1000];
+	printf("%s\n", pt);
 	for(int z = 0; z < 1000; z++) {
 		if(cypher[z] == '\0') {
 			break;
@@ -66,9 +108,9 @@ int main(int argc, char* argv[]) {
 		char ptchar = cypher[z] ^ xor;
 		pt[z] = ptchar;
 	}
-	FILE* fp = fopen("plaintext.txt", "w+");
+	FILE* fp = fopen("plaintext.txt", "a+");
 	fprintf(fp, "%s\n", pt);
-	fprintf(fp, "End of message\n");
+	//fprintf(fp, "End of message\n");
 	fclose(fp);
 	return 0;
 }
